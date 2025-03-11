@@ -53,7 +53,7 @@ def main():
             st.success("Item added successfully!")
 
     # Main content area
-    tab1, tab2 = st.tabs(["View Inventory", "Analytics"])
+    tab1, tab2, tab3 = st.tabs(["View Inventory", "Update Prices", "Analytics"])
     
     with tab1:
         if st.session_state.inventory:
@@ -112,6 +112,38 @@ def main():
             st.info("No items in inventory. Add items using the sidebar.")
     
     with tab2:
+        st.header("Update Item Prices")
+        if st.session_state.inventory:
+            df = pd.DataFrame(st.session_state.inventory)
+            
+            # Select item to update
+            item_to_update = st.selectbox(
+                "Select item to update (by ID)",
+                options=[item['id'] for item in st.session_state.inventory],
+                format_func=lambda x: f"ID: {x} - {next((item['name'] for item in st.session_state.inventory if item['id'] == x), '')}"
+            )
+            
+            # Get current price
+            current_item = next((item for item in st.session_state.inventory if item['id'] == item_to_update), None)
+            if current_item:
+                current_price = current_item['price']
+                new_price = st.number_input(
+                    "New Price ($)",
+                    min_value=0.0,
+                    value=current_price,
+                    step=0.01
+                )
+                
+                if st.button("Update Price"):
+                    for item in st.session_state.inventory:
+                        if item['id'] == item_to_update:
+                            item['price'] = new_price
+                    save_inventory()
+                    st.success(f"Price updated successfully for {current_item['name']}!")
+        else:
+            st.info("No items in inventory to update.")
+    
+    with tab3:
         if st.session_state.inventory:
             df = pd.DataFrame(st.session_state.inventory)
             
